@@ -2,14 +2,13 @@ from flask import Flask, request, render_template_string, session
 import requests
 
 app = Flask(__name__)
-app.secret_key = 'Hu61F59IuQ'  # Replace with a strong, randomly generated key
+app.secret_key = 'Hu61F59IuQ'
 
-# Replace with your Nutritionix API details
+
 app_id = "8bc7b25a"
 app_key = "dd56c0e7590da1e3f54f9269de8b9588"
 host_domain = "https://trackapi.nutritionix.com"
 
-# HTML template for the home page with updated modern styling
 HOME_PAGE_TEMPLATE = """
 <!doctype html>
 <html lang="en">
