@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>NutriStrong: Journal</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      body {
+        background-color: #f4f4f4;
+        color: #333;
+        font-family: 'Arial', sans-serif;
+      }
+      .container {
+        max-width: 800px;
+        margin-top: 50px;
+        background: #fff;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      }
+      h1 {
+        color: #007bff;
+        font-size: 2.5rem;
+      }
+      .journal {
+        margin-top: 30px;
+        background-color: #f8f9fa;
+        border-left: 4px solid #007bff;
+        padding: 15px;
+      }
+      .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+      }
+      .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container text-center">
+      <h1>NutriStrong Journal</h1>
+      <!-- Daily Journal -->
+      <div class="journal mt-4">
+        <h3>Daily Journal</h3>
+        
+        <!-- Create separate sections for each meal category -->
+        <h4>Breakfast</h4>
+        <ul>
+          {% for entry in journal %}
+            {% if entry.meal == 'breakfast' %}
+            <li class="d-flex justify-content-between align-items-center">
+              {{ entry.date }} - {{ entry.food_item }} (Calories: {{ entry.calories }} kcal)
+              <form method="post" action="/delete-entry">
+                <input type="hidden" name="entry_index" value="{{ loop.index0 }}">
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
+            </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+
+        <!-- Duplicate the structure for lunch and dinner sections -->
+        <h4>Lunch</h4>
+        <ul>
+          {% for entry in journal %}
+            {% if entry.meal == 'lunch' %}
+            <li class="d-flex justify-content-between align-items-center">
+              {{ entry.date }} - {{ entry.food_item }} (Calories: {{ entry.calories }} kcal)
+              <form method="post" action="/delete-entry">
+                <input type="hidden" name="entry_index" value="{{ loop.index0 }}">
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
+            </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+
+        <h4>Dinner</h4>
+        <ul>
+          {% for entry in journal %}
+            {% if entry.meal == 'dinner' %}
+            <li class="d-flex justify-content-between align-items-center">
+              {{ entry.date }} - {{ entry.food_item }} (Calories: {{ entry.calories }} kcal)
+              <form method="post" action="/delete-entry">
+                <input type="hidden" name="entry_index" value="{{ loop.index0 }}">
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
+            </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+        
+        <!-- Calculate and display the total calories in the journal entries -->
+        <h4>Total Calories in Journal</h4>
+        <ul>
+          <li><strong>Total Calories in Journal: {{ total_journal_calories }} kcal</strong></li>
+        </ul>
+      </div>
+      <a href="/" class="btn btn-primary btn-lg mt-4">Back to Home</a>
+    </div>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  </body>
+</html>

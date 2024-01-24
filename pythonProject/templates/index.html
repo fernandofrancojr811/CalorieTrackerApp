@@ -1,14 +1,3 @@
-from flask import Flask, request, render_template_string, session
-import requests
-
-app = Flask(__name__)
-app.secret_key = 'Hu61F59IuQ'
-
-
-app_id = "8bc7b25a"
-app_key = "dd56c0e7590da1e3f54f9269de8b9588"
-host_domain = "https://trackapi.nutritionix.com"
-
 HOME_PAGE_TEMPLATE = """
 <!doctype html>
 <html lang="en">
@@ -53,21 +42,39 @@ HOME_PAGE_TEMPLATE = """
         background-color: #dc3545;
         border-color: #dc3545;
       }
+      .journal {
+        margin-top: 30px;
+        background-color: #f8f9fa;
+        border-left: 4px solid #007bff;
+        padding: 15px;
+      }
     </style>
   </head>
   <body>
     <div class="container text-center">
-      <h1>NutriScope</h1>
+      <h1>NutriStrong</h1>
       <p class="lead">Your Personal Calorie Tracker</p>
+
+      <!-- Add the Journal button here -->
+      <a href="/journal" class="btn btn-info btn-lg mt-3">View Journal</a> 
       <form method="post" action="/get-calories" class="mt-4">
           <div class="form-group">
               <input type="text" id="food" name="food" class="form-control" placeholder="Enter a food item...">
               <input type="text" id="serving_size" name="serving_size" class="form-control mt-2" placeholder="Enter serving size (e.g., 2 oz)">
           </div>
+          <!-- Add a dropdown menu for selecting the meal of the day -->
+          <div class="form-group">
+              <label for="meal">Select Meal:</label>
+              <select id="meal" name="meal" class="form-control">
+                  <option value="breakfast">Breakfast</option>
+                  <option value="lunch">Lunch</option>
+                  <option value="dinner">Dinner</option>
+              </select>
+          </div>
           <button type="submit" class="btn btn-primary btn-lg">Get Nutritional Info</button>
       </form>
-
-      {% if nutrition_info %}
+    
+    {% if nutrition_info %}
         <div class="nutrition-info alert alert-info mt-3">
           <h4>Nutritional Information for {{ food_item }}</h4>
           <p>Calories: {{ nutrition_info['calories'] }} kcal</p>
@@ -81,12 +88,15 @@ HOME_PAGE_TEMPLATE = """
               <input type="hidden" name="carbs" value="{{ nutrition_info['carbs'] }}">
               <input type="hidden" name="sugar" value="{{ nutrition_info['sugar'] }}">
               <input type="hidden" name="fat" value="{{ nutrition_info['fat'] }}">
+              <!-- Add the 'food' input field here -->
+              <input type="hidden" name="food" value="{{ food_item }}">
+              <input type="hidden" name="meal" value="{{ request.form['meal'] }}"> <!-- Add the selected meal to the form -->
               <button type="submit" class="btn btn-warning btn-lg mt-2">Add to Daily Total</button>
           </form>
         </div>
-      {% endif %}
-
-      <div class="calorie-info alert alert-info mt-3">
+    {% endif %}
+    
+    <div class="calorie-info alert alert-info mt-3">
         <p>Daily Total Calories: <strong>{{ daily_totals.calories }}</strong></p>
         <p>Daily Total Protein: <strong>{{ daily_totals.protein }}g</strong></p>
         <p>Daily Total Carbs: <strong>{{ daily_totals.carbs }}g</strong></p>
@@ -95,76 +105,9 @@ HOME_PAGE_TEMPLATE = """
         <form method="post" action="/reset-totals">
             <button type="submit" class="btn btn-danger btn-lg">Reset Daily Totals</button>
         </form>
-      </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    {% endif %}
+    
   </body>
 </html>
 """
-
-@app.route('/', methods=['GET'])
-def home():
-    if 'daily_totals' not in session:
-        session['daily_totals'] = {'calories': 0, 'protein': 0, 'carbs': 0, 'sugar': 0, 'fat': 0}
-    return render_template_string(HOME_PAGE_TEMPLATE, daily_totals=session['daily_totals'])
-
-def get_nutritional_data(food_query):
-    api_url = f"{host_domain}/v2/natural/nutrients"
-    headers = {
-        'Content-Type': 'application/json',
-        'x-app-id': app_id,
-        'x-app-key': app_key
-    }
-    data = {'query': food_query}
-
-    response = requests.post(api_url, headers=headers, json=data)
-    try:
-        data = response.json()
-        first_food = data['foods'][0]
-        return {
-            'calories': first_food.get("nf_calories", 0),
-            'protein': first_food.get("nf_protein", 0),
-            'carbs': first_food.get("nf_total_carbohydrate", 0),
-            'sugar': first_food.get("nf_sugars", 0),
-            'fat': first_food.get("nf_total_fat", 0)
-        }
-    except (KeyError, IndexError, ValueError):
-        return None
-
-@app.route('/get-calories', methods=['POST'])
-def get_calories():
-    food_item = request.form['food']
-    serving_size = request.form['serving_size']
-    full_query = f"{serving_size} of {food_item}" if serving_size else food_item
-    nutrition_info = get_nutritional_data(full_query)
-    return render_template_string(HOME_PAGE_TEMPLATE, food_item=full_query, nutrition_info=nutrition_info, daily_totals=session.get('daily_totals', {}))
-
-@app.route('/add-nutrients', methods=['POST'])
-def add_nutrients():
-    if 'daily_totals' not in session:
-        session['daily_totals'] = {'calories': 0, 'protein': 0, 'carbs': 0, 'sugar': 0, 'fat': 0}
-    
-    nutrients = {
-        'calories': request.form.get('calories', type=float, default=0),
-        'protein': request.form.get('protein', type=float, default=0),
-        'carbs': request.form.get('carbs', type=float, default=0),
-        'sugar': request.form.get('sugar', type=float, default=0),
-        'fat': request.form.get('fat', type=float, default=0)
-    }
-
-    for nutrient, value in nutrients.items():
-        session['daily_totals'][nutrient] += value
-    
-    session.modified = True
-
-    return render_template_string(HOME_PAGE_TEMPLATE, daily_totals=session['daily_totals'])
-
-@app.route('/reset-totals', methods=['POST'])
-def reset_totals():
-    session['daily_totals'] = {'calories': 0, 'protein': 0, 'carbs': 0, 'sugar': 0, 'fat': 0}
-    return render_template_string(HOME_PAGE_TEMPLATE, daily_totals=session['daily_totals'])
-
-if __name__ == '__main__':
-    app.run(debug=True)
